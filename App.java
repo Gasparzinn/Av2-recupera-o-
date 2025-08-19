@@ -1,0 +1,120 @@
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.ServletHandler;
+
+public class App {
+
+    // listas em memória
+    private static List<String> clientes = new ArrayList<>();
+    private static List<String> produtos = new ArrayList<>();
+
+    public static void main(String[] args) throws Exception {
+        Server server = new Server(8080);
+        ServletHandler handler = new ServletHandler();
+        server.setHandler(handler);
+
+        handler.addServletWithMapping(LoginServlet.class, "/login");
+        handler.addServletWithMapping(ClientesServlet.class, "/clientes");
+        handler.addServletWithMapping(ProdutosServlet.class, "/produtos");
+
+        System.out.println("Servidor rodando em http://localhost:8080/login");
+        server.start();
+        server.join();
+    }
+
+    public static class LoginServlet extends HttpServlet {
+        @Override
+        protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+                throws IOException {
+            resp.setContentType("text/html");
+            PrintWriter out = resp.getWriter();
+            out.println("<h2>Login</h2>");
+            out.println("<form method='post'>");
+            out.println("Usuário: <input name='usuario'><br>");
+            out.println("Senha: <input type='password' name='senha'><br>");
+            out.println("<button type='submit'>Entrar</button>");
+            out.println("</form>");
+        }
+
+        @Override
+        protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+                throws IOException {
+            String usuario = req.getParameter("usuario");
+            String senha = req.getParameter("senha");
+
+            if ("admin".equals(usuario) && "123".equals(senha)) {
+                resp.sendRedirect("/clientes");
+            } else {
+                resp.getWriter().println("Login inválido! <a href='/login'>Tentar novamente</a>");
+            }
+        }
+    }
+
+    public static class ClientesServlet extends HttpServlet {
+        @Override
+        protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+                throws IOException {
+            resp.setContentType("text/html");
+            PrintWriter out = resp.getWriter();
+            out.println("<h2>Cadastro de Clientes</h2>");
+            out.println("<form method='post'>");
+            out.println("Nome: <input name='nome'><br>");
+            out.println("<button type='submit'>Salvar</button>");
+            out.println("</form>");
+            out.println("<h3>Clientes cadastrados:</h3><ul>");
+            for (String c : clientes) {
+                out.println("<li>" + c + "</li>");
+            }
+            out.println("</ul>");
+            out.println("<a href='/produtos'>Ir para Produtos</a>");
+        }
+
+        @Override
+        protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+                throws IOException {
+            String nome = req.getParameter("nome");
+            if (nome != null && !nome.isBlank()) {
+                clientes.add(nome);
+            }
+            resp.sendRedirect("/clientes");
+        }
+    }
+
+    public static class ProdutosServlet extends HttpServlet {
+        @Override
+        protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+                throws IOException {
+            resp.setContentType("text/html");
+            PrintWriter out = resp.getWriter();
+            out.println("<h2>Cadastro de Produtos</h2>");
+            out.println("<form method='post'>");
+            out.println("Produto: <input name='produto'><br>");
+            out.println("<button type='submit'>Salvar</button>");
+            out.println("</form>");
+            out.println("<h3>Produtos cadastrados:</h3><ul>");
+            for (String p : produtos) {
+                out.println("<li>" + p + "</li>");
+            }
+            out.println("</ul>");
+            out.println("<a href='/clientes'>Voltar para Clientes</a>");
+        }
+
+        @Override
+        protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+                throws IOException {
+            String produto = req.getParameter("produto");
+            if (produto != null && !produto.isBlank()) {
+                produtos.add(produto);
+            }
+            resp.sendRedirect("/produtos");
+        }
+    }
+          }
